@@ -1,4 +1,4 @@
-import { Client } from "pg";
+import { Client, Pool } from "pg";
 
 function ensureString(value: unknown, fallback: string): string {
   return typeof value === "string" ? value : fallback;
@@ -11,6 +11,19 @@ const dbConfig = {
   user: ensureString(process.env.DB_USER, "scenario_ui"),
   password: ensureString(process.env.DB_PASSWORD, ""),
 };
+
+const pool = new Pool(dbConfig);
+
+/**
+ * Run a query using the connection pool.
+ */
+export async function query<T = unknown>(
+  text: string,
+  params?: unknown[]
+): Promise<{ rows: T[]; rowCount: number }> {
+  const result = await pool.query(text, params);
+  return { rows: result.rows as T[], rowCount: result.rowCount ?? 0 };
+}
 
 /**
  * Test database connection. Returns true if connected, false otherwise.
@@ -41,4 +54,4 @@ export function getDbConfig(): typeof dbConfig {
   return { ...dbConfig };
 }
 
-export { dbConfig };
+export { dbConfig, pool };
