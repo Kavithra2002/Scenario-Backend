@@ -247,3 +247,23 @@ systemAdminRoutes.patch(
     res.json({ user: responseUser });
   }
 );
+
+// DELETE /api/system-admin/users/:id
+systemAdminRoutes.delete(
+  "/users/:id",
+  authenticateJwt,
+  requireSystemAdmin,
+  async (req, res: Response) => {
+    const id = parseInt(req.params.id, 10);
+    if (Number.isNaN(id) || id < 1) {
+      res.status(400).json({ message: "Invalid user id" });
+      return;
+    }
+    const { rowCount } = await query("DELETE FROM users WHERE id = $1", [id]);
+    if (rowCount === 0) {
+      res.status(404).json({ message: "User not found" });
+      return;
+    }
+    res.status(200).json({ success: true, message: "User deleted" });
+  }
+);
